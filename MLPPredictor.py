@@ -49,6 +49,7 @@ class MLPPredictor(BaseEstimator, RegressorMixin):
                 drop=self.drop
             )
             if self.model_state is not None:
+                print('pretrained model_state is used ')
                 self.model.model.load_state_dict(self.model_state)
 
         # Fine-tune on new data

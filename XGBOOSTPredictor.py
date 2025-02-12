@@ -28,6 +28,7 @@ class XGBOOSTPredictor(BaseEstimator, RegressorMixin):
         load it for fine-tuning; otherwise, train from scratch.
         """
         if self.booster_state and self.booster_state != "NO_PRETRAINING":
+            print('pretrained model used')
             self.model = XGBRegressor(**self.params, objective='reg:squarederror')
             self.model.load_model(self.booster_state)
             self.model.fit(X, y, eval_set=[(X, y)], verbose=False, xgb_model=self.model.get_booster())

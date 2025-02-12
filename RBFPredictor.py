@@ -47,6 +47,7 @@ class RBFPredictor(BaseEstimator, RegressorMixin):
         print("DEBUG: Entered RBFPredictor.fit()")
         if self.centers is not None and self.weights is not None:
             # Start from pre-trained centers/weights
+            print('pretrained centers and weights are used')
             self.model = RBFNN(
                 n_centers=self.n_centers,
                 kernel=self.kernel,

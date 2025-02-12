@@ -158,12 +158,14 @@ class PredictorPipeline:
         self.prepare_data(model)
         svr_predictor = SVRPredictor()
 
+        c_index = make_scorer(c_index_scorer, greater_is_better=True)
+
         pipeline = Pipeline([
             ('preprocessor', self.preprocessor),
             ('svr', svr_predictor)
         ]) if self.preprocessing else Pipeline([('svr', svr_predictor)])
 
-        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring='neg_mean_squared_error', cv=5, n_jobs=-1)
+        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring=c_index, cv=5, n_jobs=-1)
         grid_search.fit(self.X, self.Y)
         print("Global best params:", grid_search.best_params_)
         best_model = grid_search.best_estimator_
@@ -183,12 +185,14 @@ class PredictorPipeline:
         self.prepare_data(model)
         rbf_predictor = RBFPredictor()
 
+        c_index = make_scorer(c_index_scorer, greater_is_better=True)
+
         pipeline = Pipeline([
             ('preprocessor', self.preprocessor),
             ('rbf', rbf_predictor)
         ]) if self.preprocessing else Pipeline([('rbf', rbf_predictor)])
 
-        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring='neg_mean_squared_error', cv=5, n_jobs=-1)
+        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring=c_index, cv=5, n_jobs=-1)
         grid_search.fit(self.X, self.Y)
         print("Global best params:", grid_search.best_params_)
 
@@ -207,13 +211,14 @@ class PredictorPipeline:
         """Run MLP with grid search and cross_val_predict."""
         self.prepare_data(model)
         mlp_predictor = MLPPredictor()
+        c_index = make_scorer(c_index_scorer, greater_is_better=True)
 
         pipeline = Pipeline([
             ('preprocessor', self.preprocessor),
             ('mlp', mlp_predictor)
         ]) if self.preprocessing else Pipeline([('mlp', mlp_predictor)])
 
-        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring='neg_mean_squared_error', cv=5, n_jobs=-1)
+        grid_search = GridSearchCV(pipeline, param_grid=param_grid, scoring=c_index, cv=5, n_jobs=-1)
         grid_search.fit(self.X, self.Y)
         print("Global best params:", grid_search.best_params_)
 
@@ -260,8 +265,8 @@ if __name__ == "__main__":
     }
 
     # Loops for scenarios
-    pretrain_pct = [0.0]
-    preprocessing_options = [True, False]
+    pretrain_pct = [0.1]
+    preprocessing_options = [True]
     pretraining_options = [True, False]  # if you want to add them for other scenarios
 
     # DataFrames for final results
@@ -287,10 +292,96 @@ if __name__ == "__main__":
                     )
                     if prtrn:
                         # SCENARIO 1: partial data with pretraining
-                        pass
+                
+                        # XGBoost
+                        xgb_r2, xgb_mse, xgb_best_params, xgb_c_index = pipeline.run_XGBoostPipeline(
+                            param_grid=xgb_param_grid, model='XGB')
+                        results_full_no_pretraining.append({
+                            "Model": "XGBoost",
+                            "R^2": xgb_r2,
+                            "MSE": xgb_mse,
+                            "C-Index": xgb_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # SVR
+                        svr_r2, svr_mse, svr_best_params, svr_c_index = pipeline.run_SVRPipeline(
+                            param_grid=svr_param_grid, model='SVR')
+                        results_full_no_pretraining.append({
+                            "Model": "SVR",
+                            "R^2": svr_r2,
+                            "MSE": svr_mse,
+                            "C-Index": svr_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # RBF
+                        rbf_r2, rbf_mse, rbf_best_params, rbf_c_index = pipeline.run_RBFPipeline(
+                            param_grid=rbf_param_grid, model='RBF')
+                        results_full_no_pretraining.append({
+                            "Model": "RBF",
+                            "R^2": rbf_r2,
+                            "MSE": rbf_mse,
+                            "C-Index": rbf_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # MLP
+                        mlp_r2, mlp_mse, mlp_best_params, mlp_c_index = pipeline.run_MLPPipeline(
+                            param_grid=mlp_param_grid, model='MLP')
+                        results_full_no_pretraining.append({
+                            "Model": "MLP",
+                            "R^2": mlp_r2,
+                            "MSE": mlp_mse,
+                            "C-Index": mlp_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
                     else:
-                        # SCENARIO 2: partial data, no pretraining
-                        pass
+
+                        # XGBoost
+                        xgb_r2, xgb_mse, xgb_best_params, xgb_c_index = pipeline.run_XGBoostPipeline(
+                            param_grid=xgb_param_grid, model='XGB')
+                        results_full_no_pretraining.append({
+                            "Model": "XGBoost",
+                            "R^2": xgb_r2,
+                            "MSE": xgb_mse,
+                            "C-Index": xgb_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # SVR
+                        svr_r2, svr_mse, svr_best_params, svr_c_index = pipeline.run_SVRPipeline(
+                            param_grid=svr_param_grid, model='SVR')
+                        results_full_no_pretraining.append({
+                            "Model": "SVR",
+                            "R^2": svr_r2,
+                            "MSE": svr_mse,
+                            "C-Index": svr_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # RBF
+                        rbf_r2, rbf_mse, rbf_best_params, rbf_c_index = pipeline.run_RBFPipeline(
+                            param_grid=rbf_param_grid, model='RBF')
+                        results_full_no_pretraining.append({
+                            "Model": "RBF",
+                            "R^2": rbf_r2,
+                            "MSE": rbf_mse,
+                            "C-Index": rbf_c_index,
+                            "Preprocessing": preprocessing
+                        })
+
+                        # MLP
+                        mlp_r2, mlp_mse, mlp_best_params, mlp_c_index = pipeline.run_MLPPipeline(
+                            param_grid=mlp_param_grid, model='MLP')
+                        results_full_no_pretraining.append({
+                            "Model": "MLP",
+                            "R^2": mlp_r2,
+                            "MSE": mlp_mse,
+                            "C-Index": mlp_c_index,
+                            "Preprocessing": preprocessing
+                        })
             else:
                 # SCENARIO 3: Full Data Set, No Pretraining
                 logging.info("Running Scenario: Full Data, No Pretraining")
